@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
@@ -30,6 +31,9 @@ class DigitRecognitionProvider extends ChangeNotifier {
   Uint8List? _preprocessedPreviewBytes;
   List<double>? _currentInputTensorPixels;
 
+  Timer? _autoDebounceTimer;
+  final Duration _autoDebounceDuration = const Duration(milliseconds: 450);
+
   DigitRecognitionProvider({
     MnistClassifier? classifier,
     ImageProcessingService? imageService,
@@ -56,13 +60,35 @@ class DigitRecognitionProvider extends ChangeNotifier {
   ModelMetadataInfo? get metadataInfo => _classifier.metadataInfo;
 
   void _onDrawingChanged() {
-    // If user cleared the canvas, reset the prediction
-    if (_drawingController.isEmpty && _currentPrediction != null) {
-      _currentPrediction = null;
-      _preprocessedPreviewBytes = null;
-      _currentInputTensorPixels = null;
+    // If user cleared the canvas, cancel debounce and reset prediction
+    if (_drawingController.isEmpty) {
+      _autoDebounceTimer?.cancel();
+      if (_currentPrediction != null) {
+        _currentPrediction = null;
+        _preprocessedPreviewBytes = null;
+        _currentInputTensorPixels = null;
+      }
     }
     notifyListeners();
+  }
+
+  /// Hook called when the user touches down or starts drawing on the canvas.
+  /// Cancels any pending auto-recognition timer so it doesn't fire mid-stroke.
+  void onStrokeStarted() {
+    _autoDebounceTimer?.cancel();
+  }
+
+  /// Hook called when the user lifts their finger/pen from the canvas.
+  /// Automatically schedules on-device inference after a brief pause (debounced).
+  void onStrokeEnded() {
+    _autoDebounceTimer?.cancel();
+    if (_drawingController.isEmpty || !isModelReady) return;
+
+    _autoDebounceTimer = Timer(_autoDebounceDuration, () {
+      if (!_drawingController.isEmpty && isModelReady && !_isRecognizing) {
+        recognize();
+      }
+    });
   }
 
   /// Initializes the ONNX Runtime session and loads the model from assets.
@@ -117,8 +143,9 @@ class DigitRecognitionProvider extends ChangeNotifier {
     }
   }
 
-  /// Clears the drawing canvas and discards the active prediction.
+  /// Clears the drawing canvas, cancels pending auto-detection, and discards prediction.
   void clear() {
+    _autoDebounceTimer?.cancel();
     _drawingController.clear();
     _currentPrediction = null;
     _preprocessedPreviewBytes = null;
@@ -129,6 +156,7 @@ class DigitRecognitionProvider extends ChangeNotifier {
 
   /// Loads a predefined digit sample (0-9) and automatically executes recognition if model is ready.
   Future<void> loadSampleDigit(int digit) async {
+    _autoDebounceTimer?.cancel();
     _drawingController.loadSampleDigit(digit);
     if (isModelReady) {
       await recognize();
@@ -137,6 +165,7 @@ class DigitRecognitionProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _autoDebounceTimer?.cancel();
     _drawingController.removeListener(_onDrawingChanged);
     _drawingController.dispose();
     _classifier.dispose();

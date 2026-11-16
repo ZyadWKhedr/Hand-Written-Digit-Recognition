@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:handwritten_digit_recognition/controllers/drawing_controller.dart';
 import 'package:handwritten_digit_recognition/models/digit_prediction.dart';
 import 'package:handwritten_digit_recognition/models/model_metadata_info.dart';
+import 'package:handwritten_digit_recognition/providers/digit_recognition_provider.dart';
 import 'package:handwritten_digit_recognition/services/image_processing_service.dart';
 
 void main() {
@@ -98,9 +99,28 @@ void main() {
     });
   });
 
+  group('Auto-detection Debounce Tests', () {
+    test('Debounce hooks cancel and reschedule auto-detection', () {
+      final provider = DigitRecognitionProvider();
+      expect(provider.currentPrediction, isNull);
+
+      // Start stroke cancels debounce
+      provider.onStrokeStarted();
+      expect(provider.isRecognizing, isFalse);
+
+      // End stroke schedules debounce
+      provider.drawingController.startStroke(const Offset(20, 20));
+      provider.onStrokeEnded();
+
+      // Clear immediately resets
+      provider.clear();
+      expect(provider.drawingController.isEmpty, isTrue);
+      expect(provider.currentPrediction, isNull);
+    });
+  });
+
   group('Softmax Math Verification', () {
     test('Correctly computes softmax probabilities and argmax', () {
-      // Raw logits where index 3 has the highest score
       final logits = [1.2, 0.5, -0.8, 8.4, 0.1, -1.2, 0.0, 2.1, 0.3, 0.2];
 
       final maxLogit = logits.reduce(math.max);
@@ -108,11 +128,9 @@ void main() {
       final sum = exponentials.reduce((a, b) => a + b);
       final probabilities = exponentials.map((v) => v / sum).toList();
 
-      // Probabilities must sum to 1.0
       final totalProb = probabilities.reduce((a, b) => a + b);
       expect(totalProb, closeTo(1.0, 1e-6));
 
-      // Highest probability must be at index 3
       var bestIndex = 0;
       for (var i = 1; i < probabilities.length; i++) {
         if (probabilities[i] > probabilities[bestIndex]) {

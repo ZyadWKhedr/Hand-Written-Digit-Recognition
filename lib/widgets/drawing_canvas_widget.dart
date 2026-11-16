@@ -1,19 +1,20 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/drawing_stroke.dart';
 import '../providers/digit_recognition_provider.dart';
 
-/// Stateless widget providing an interactive touch/mouse canvas for handwriting digits.
+/// Clean, expanded Apple-style drawing canvas widget.
 ///
-/// Draws on a high-contrast black background with white strokes to match the MNIST
-/// training distribution ([0.0 = black, 1.0 = white]).
+/// Automatically auto-detects digits when the user finishes a stroke.
+/// Stateless and strictly under 200 lines.
 class DrawingCanvasWidget extends StatelessWidget {
-  final double size;
+  final double? fixedSize;
 
   const DrawingCanvasWidget({
     super.key,
-    this.size = 280.0,
+    this.fixedSize,
   });
 
   @override
@@ -21,97 +22,116 @@ class DrawingCanvasWidget extends StatelessWidget {
     final provider = context.watch<DigitRecognitionProvider>();
     final controller = provider.drawingController;
 
-    return Center(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            // Interactive touch surface
-            GestureDetector(
-              onPanStart: (details) => controller.startStroke(details.localPosition),
-              onPanUpdate: (details) => controller.updateStroke(details.localPosition),
-              onPanEnd: (_) => controller.endStroke(),
-              child: CustomPaint(
-                size: Size(size, size),
-                painter: _DrawingPainter(strokes: controller.strokes),
-              ),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Expand to fill available width (capped at 420 for tablets/desktop)
+        final effectiveSize = fixedSize ?? constraints.maxWidth.clamp(280.0, 420.0);
 
-            // Hint label when canvas is untouched
-            if (controller.isEmpty)
-              IgnorePointer(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.draw_outlined,
-                        size: 40,
-                        color: Colors.white.withValues(alpha: 0.3),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Draw a digit (0 – 9) here',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+        return Center(
+          child: Container(
+            width: effectiveSize,
+            height: effectiveSize,
+            decoration: BoxDecoration(
+              color: const Color(0xFF0D0D11),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.10),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                // Touch Drawing Surface with Auto-Detect Hooks
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onPanStart: (details) {
+                    provider.onStrokeStarted();
+                    controller.startStroke(details.localPosition);
+                  },
+                  onPanUpdate: (details) {
+                    controller.updateStroke(details.localPosition);
+                  },
+                  onPanEnd: (_) {
+                    controller.endStroke();
+                    provider.onStrokeEnded();
+                  },
+                  child: CustomPaint(
+                    size: Size(effectiveSize, effectiveSize),
+                    painter: _DrawingPainter(strokes: controller.strokes),
                   ),
                 ),
-              ),
 
-            // Canvas action buttons (Undo & Clear)
-            if (!controller.isEmpty)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton.filledTonal(
-                      icon: const Icon(Icons.undo, size: 18),
-                      visualDensity: VisualDensity.compact,
-                      tooltip: 'Undo last stroke',
-                      onPressed: controller.undo,
+                // Subtle Apple-style placeholder
+                if (controller.isEmpty)
+                  IgnorePointer(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            CupertinoIcons.pencil_outline,
+                            size: 44,
+                            color: Colors.white.withValues(alpha: 0.25),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Write a digit',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.35),
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 4),
-                    IconButton.filledTonal(
-                      icon: const Icon(Icons.clear, size: 18),
-                      visualDensity: VisualDensity.compact,
-                      tooltip: 'Clear canvas',
-                      onPressed: provider.clear,
+                  ),
+
+                // Minimal Floating Undo Pill
+                if (!controller.isEmpty)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: CupertinoButton(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(16),
+                      onPressed: () {
+                        controller.undo();
+                        provider.onStrokeEnded();
+                      },
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(CupertinoIcons.arrow_counterclockwise, size: 14, color: Colors.white),
+                          SizedBox(width: 4),
+                          Text(
+                            'Undo',
+                            style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
-/// Custom painter for rendering list of [DrawingStroke]s onto the canvas.
+/// Custom painter for rendering smooth white strokes onto the canvas.
 class _DrawingPainter extends CustomPainter {
   final List<DrawingStroke> strokes;
 

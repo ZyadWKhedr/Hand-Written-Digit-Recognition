@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -60,7 +61,6 @@ void main() {
 
     // Verify ready state
     expect(provider.isModelReady, isTrue);
-    expect(find.text('ONNX Ready'), findsOneWidget);
 
     // Load sample digit 5
     await provider.loadSampleDigit(5);
@@ -69,19 +69,19 @@ void main() {
     // Verify prediction card shows digit 5 and 90.0% confidence
     expect(find.byType(PredictionResultCard), findsOneWidget);
     expect(find.text('5'), findsWidgets); // digit in badge and button
-    expect(find.text('Confidence: 90.0%'), findsOneWidget);
+    expect(find.text('90.0%'), findsWidgets);
 
     // Verify preview card and probabilities chart are populated
     expect(find.byType(PreprocessedPreviewCard), findsOneWidget);
-    expect(find.text('What the Model Sees (Tensor Input)'), findsOneWidget);
+    expect(find.text('Tensor Input [1, 1, 28, 28]'), findsOneWidget);
     expect(find.byType(ProbabilitiesChart), findsOneWidget);
-    expect(find.text('90.0%'), findsOneWidget);
 
     // Verify Clear button resets the prediction
-    final clearBtn = find.widgetWithText(OutlinedButton, 'Clear');
+    final clearBtn = find.widgetWithText(CupertinoButton, 'Clear');
     await tester.tap(clearBtn);
     await tester.pumpAndSettle();
 
-    expect(find.text('Draw a digit above or tap a sample to run ONNX inference'), findsOneWidget);
+    expect(find.text('Ready'), findsOneWidget);
+    expect(find.text('Auto-detects as soon as you pause'), findsOneWidget);
   });
 }

@@ -22,15 +22,16 @@ Using handwritten digit recognition (**MNIST**) as a practical example, this rep
 
 ```mermaid
 flowchart LR
-    A["Raw Drawing Canvas\n(280x280 Pixels)"] --> B["Image Preprocessing\n(Crop & Center to 20x20 in 28x28)"]
-    B --> C["Luminance & Normalization\n(ITU-R BT.601 -> [0.0, 1.0])"]
-    C --> D["Input Tensor Construction\nOrtValue Float32 [1, 1, 28, 28]"]
-    D --> E["ONNX Runtime Engine\nsession.run(inputs)"]
-    E --> F["Output Tensor Extraction\nRaw Logits [1, 10]"]
-    F --> G["Softmax Postprocessing\nP(i) = exp(s - max) / sum"]
-    G --> H["Prediction Result\n(Digit + Confidence + Latency)"]
-    D -.-> I["tensor.dispose()\n(Free Native Memory)"]
-    E -.-> I
+    A["Raw Drawing Canvas\n(Expanded Responsive Canvas)"] --> B["Auto-Detect Debounce\n(450ms pause after stroke)"]
+    B --> C["Image Preprocessing\n(Crop & Center to 20x20 in 28x28)"]
+    C --> D["Luminance & Normalization\n(ITU-R BT.601 -> [0.0, 1.0])"]
+    D --> E["Input Tensor Construction\nOrtValue Float32 [1, 1, 28, 28]"]
+    E --> F["ONNX Runtime Engine\nsession.run(inputs)"]
+    F --> G["Output Tensor Extraction\nRaw Logits [1, 10]"]
+    G --> H["Softmax Postprocessing\nP(i) = exp(s - max) / sum"]
+    H --> I["Real-Time Prediction\n(Digit + Confidence + Latency)"]
+    E -.-> J["tensor.dispose()\n(Free Native Memory)"]
+    F -.-> J
 ```
 
 ---
@@ -137,28 +138,27 @@ To keep the repository clean, maintainable, and beginner-friendly:
 
 ```
 lib/
-├── main.dart                                   # MultiProvider setup & Material 3 Dark theme (56 lines)
+├── main.dart                                   # MultiProvider setup & Apple Dark theme (45 lines)
 ├── models/
 │   ├── digit_prediction.dart                   # Data class: digit, confidence, probabilities, latencies
 │   ├── drawing_stroke.dart                     # Model representing vector drawing strokes on canvas
 │   └── model_metadata_info.dart                # Model specifications & tensor properties
 ├── services/
 │   ├── mnist_classifier.dart                   # Core ONNX session, inference run, softmax, disposal
-│   └── image_processing_service.dart           # Rasterization, bounding box crop, aspect centering
+│   └── image_processing_service.dart           # Pure-Dart rasterization, bounding box crop, aspect centering
 ├── controllers/
 │   └── drawing_controller.dart                 # Touch gestures, stroke coordinate buffer, undo/clear
 ├── providers/
-│   └── digit_recognition_provider.dart         # Lifecycle states, recognition execution, sample loader
+│   └── digit_recognition_provider.dart         # Auto-detection debouncer, lifecycle states, inference
 ├── views/
-│   └── home_page.dart                          # Main screen, fully stateless (< 200 lines)
+│   └── home_page.dart                          # Minimalist Apple HIG main screen, stateless (105 lines)
 └── widgets/
-    ├── drawing_canvas_widget.dart              # Interactive high-contrast touch drawing board
-    ├── prediction_result_card.dart             # Top predicted digit, confidence %, latency metrics
-    ├── probabilities_chart.dart                # Bar chart of 10-class Softmax probability distribution
-    ├── preprocessed_preview_card.dart          # 28x28 pixel grid showing tensor input [1, 1, 28, 28]
-    ├── action_toolbar.dart                     # Primary "Recognize" and "Clear" actions
-    ├── sample_digit_selector.dart              # Quick-test chips for digits 0-9
-    └── model_info_sheet.dart                   # Bottom sheet displaying ONNX model architecture
+    ├── drawing_canvas_widget.dart              # Expanded responsive drawing canvas with auto-detect (167 lines)
+    ├── prediction_result_card.dart             # Apple-style hero prediction card & latency badge (125 lines)
+    ├── probabilities_chart.dart                # 10-class Softmax probability distribution bars (108 lines)
+    ├── preprocessed_preview_card.dart          # 28x28 pixel grid showing tensor input [1, 1, 28, 28] (81 lines)
+    ├── sample_digit_selector.dart              # Apple-style quick test chips 0-9 (62 lines)
+    └── model_info_sheet.dart                   # Bottom sheet displaying ONNX model architecture (108 lines)
 ```
 
 ---

@@ -1,10 +1,13 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/digit_recognition_provider.dart';
 
-/// Stateless card displaying the top digit prediction, Softmax confidence score,
-/// and latency metrics (preprocessing + inference time).
+/// Minimalist Apple-style prediction header card.
+///
+/// Automatically updates in real-time as digits are auto-detected.
+/// Stateless and strictly under 200 lines.
 class PredictionResultCard extends StatelessWidget {
   const PredictionResultCard({super.key});
 
@@ -12,109 +15,110 @@ class PredictionResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<DigitRecognitionProvider>();
     final prediction = provider.currentPrediction;
-    final theme = Theme.of(context);
+    final isRecognizing = provider.isRecognizing;
 
-    if (prediction == null) {
-      return Card(
-        elevation: 0,
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-          child: Center(
-            child: Text(
-              'Draw a digit above or tap a sample to run ONNX inference',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF18181F),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: Row(
+        children: [
+          // Large Hero Digit or Placeholder
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: prediction != null
+                  ? CupertinoColors.activeBlue.withValues(alpha: 0.15)
+                  : Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: isRecognizing
+                  ? const CupertinoActivityIndicator(radius: 12)
+                  : Text(
+                      prediction != null ? '${prediction.digit}' : '—',
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w700,
+                        color: prediction != null ? CupertinoColors.activeBlue : Colors.white24,
+                        letterSpacing: -1,
+                      ),
+                    ),
             ),
           ),
-        ),
-      );
-    }
+          const SizedBox(width: 16),
 
-    final isHighConfidence = prediction.confidence >= 0.70;
-    final badgeColor = isHighConfidence
-        ? Colors.green
-        : (prediction.confidence >= 0.40 ? Colors.orange : Colors.red);
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Prominent Predicted Digit Display
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                  width: 2,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  '${prediction.digit}',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onPrimaryContainer,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-
-            // Prediction Details & Latency Metrics
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+          // Metadata Description
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (prediction != null) ...[
                   Row(
                     children: [
                       Text(
-                        'Confidence: ${prediction.confidencePercentage}',
+                        'Digit ${prediction.digit}',
                         style: const TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          letterSpacing: -0.3,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        width: 10,
-                        height: 10,
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(
-                          color: badgeColor,
-                          shape: BoxShape.circle,
+                          color: CupertinoColors.activeGreen.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          prediction.confidencePercentage,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: CupertinoColors.activeGreen,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Text(
-                    'Inference: ${prediction.inferenceTime.inMicroseconds / 1000.0} ms',
+                    'Inference: ${(prediction.inferenceTime.inMicroseconds / 1000.0).toStringAsFixed(1)} ms · On-Device',
                     style: TextStyle(
-                      fontSize: 13,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                ] else ...[
                   Text(
-                    'Preprocess: ${prediction.preprocessingTime.inMicroseconds / 1000.0} ms',
+                    isRecognizing ? 'Detecting...' : 'Ready',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Auto-detects as soon as you pause',
                     style: TextStyle(
                       fontSize: 13,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: Colors.white.withValues(alpha: 0.45),
                     ),
                   ),
                 ],
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
