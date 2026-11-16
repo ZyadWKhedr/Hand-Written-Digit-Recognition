@@ -6,7 +6,7 @@ Using handwritten digit recognition (**MNIST**) as a practical example, this rep
 
 ---
 
-## 📖 Key Architectural Concepts
+## Key Architectural Concepts
 
 ### 1. What is ONNX?
 **ONNX (Open Neural Network Exchange)** is an open format for representing machine learning models developed across various frameworks (PyTorch, TensorFlow, Scikit-Learn, JAX).
@@ -18,7 +18,7 @@ Using handwritten digit recognition (**MNIST**) as a practical example, this rep
 
 ---
 
-## 🔄 The On-Device Inference Pipeline
+## The On-Device Inference Pipeline
 
 ```mermaid
 flowchart LR
@@ -36,7 +36,7 @@ flowchart LR
 
 ---
 
-## 🔬 Model Specifications (MNIST-12)
+## Model Specifications (MNIST-12)
 
 The pretrained model used is from the official [ONNX Model Zoo](https://github.com/onnx/models/tree/main/validated/vision/classification/mnist):
 
@@ -53,7 +53,7 @@ The pretrained model used is from the official [ONNX Model Zoo](https://github.c
 
 ---
 
-## 📐 End-to-End Implementation Walkthrough
+## End-to-End Implementation Walkthrough
 
 ### 1. Model Inspection with Netron
 Before writing any Dart code, inspect the model using [Netron](https://netron.app/). Netron reveals:
@@ -128,7 +128,7 @@ try {
 
 ---
 
-## 🏛️ Codebase Architecture & Constraints
+## Codebase Architecture & Constraints
 
 To keep the repository clean, maintainable, and beginner-friendly:
 * **Simple State Management**: Powered by `provider` (`ChangeNotifierProvider`).
@@ -163,7 +163,7 @@ lib/
 
 ---
 
-## 📱 Mobile Platform Considerations
+## Mobile Platform Considerations
 
 ### Android (ProGuard / R8 Rules)
 When building for release with code shrinking enabled, native JNI bindings can be stripped. Ensure `android/app/proguard-rules.pro` includes:
@@ -215,7 +215,7 @@ flutter run
 
 ---
 
-## 📚 References & Further Reading
+## References & Further Reading
 * [ONNX Model Zoo — MNIST](https://github.com/onnx/models/tree/main/validated/vision/classification/mnist)
 * [ONNX Runtime Mobile Deployment Documentation](https://onnxruntime.ai/docs/tutorials/mobile/)
 * [Netron Model Visualizer](https://netron.app/)
