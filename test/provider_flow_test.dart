@@ -9,8 +9,6 @@ import 'package:handwritten_digit_recognition/providers/digit_recognition_provid
 import 'package:handwritten_digit_recognition/services/mnist_classifier.dart';
 import 'package:handwritten_digit_recognition/views/home_page.dart';
 import 'package:handwritten_digit_recognition/widgets/prediction_result_card.dart';
-import 'package:handwritten_digit_recognition/widgets/probabilities_chart.dart';
-import 'package:handwritten_digit_recognition/widgets/preprocessed_preview_card.dart';
 
 /// Test double simulating MnistClassifier for deterministic testing without native JNI.
 class MockMnistClassifier extends MnistClassifier {
@@ -47,7 +45,7 @@ class MockMnistClassifier extends MnistClassifier {
 }
 
 void main() {
-  testWidgets('Full recognition flow updates UI with digit 5 and probabilities', (tester) async {
+  testWidgets('Full recognition flow updates UI with digit 5 and inline tensor preview', (tester) async {
     final mockClassifier = MockMnistClassifier();
     final provider = DigitRecognitionProvider(classifier: mockClassifier);
 
@@ -71,10 +69,8 @@ void main() {
     expect(find.text('5'), findsWidgets); // digit in badge and button
     expect(find.text('90.0%'), findsWidgets);
 
-    // Verify preview card and probabilities chart are populated
-    expect(find.byType(PreprocessedPreviewCard), findsOneWidget);
-    expect(find.text('Tensor Input [1, 1, 28, 28]'), findsOneWidget);
-    expect(find.byType(ProbabilitiesChart), findsOneWidget);
+    // Verify inline 28x28 tensor thumbnail is rendered
+    expect(find.byType(Image), findsOneWidget);
 
     // Verify Clear button resets the prediction
     final clearBtn = find.widgetWithText(CupertinoButton, 'Clear');

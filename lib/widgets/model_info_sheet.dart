@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../models/model_metadata_info.dart';
+import 'probabilities_chart.dart';
 
 /// Educational modal bottom sheet detailing ONNX model specifications,
 /// tensor dimensions, and runtime properties.
@@ -30,57 +31,49 @@ class ModelInfoSheet extends StatelessWidget {
         top: 16,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 36,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2.5),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Row(
-            children: [
-              Icon(CupertinoIcons.info_circle, size: 20, color: CupertinoColors.activeBlue),
-              SizedBox(width: 8),
-              Text(
-                'ONNX Model Specification',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  letterSpacing: -0.3,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2.5),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildInfoRow('Model File', metadata.modelName),
-          _buildInfoRow('Model Size', metadata.formattedSize),
-          _buildInfoRow('Input Name', metadata.inputName),
-          _buildInfoRow('Input Shape', '${metadata.inputShape} (${metadata.inputType})'),
-          _buildInfoRow('Output Name', metadata.outputName),
-          _buildInfoRow('Output Shape', '${metadata.outputShape} (${metadata.outputType})'),
-          _buildInfoRow('Execution Provider', metadata.executionProvider),
-          const Divider(height: 24, color: Colors.white12),
-          const Text(
-            'Inference Pipeline:',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Raw Canvas → 28x28 Resizing → ITU-R BT.601 Grayscale → '
-            'Normalization [0.0, 1.0] → Float32 Tensor [1, 1, 28, 28] → '
-            'ONNX Runtime Inference → Softmax Logits → Top Class Prediction.',
-            style: TextStyle(fontSize: 12, color: Colors.white54, height: 1.4),
-          ),
-        ],
+            ),
+            const SizedBox(height: 16),
+            const Row(
+              children: [
+                Icon(CupertinoIcons.info_circle, size: 20, color: CupertinoColors.activeBlue),
+                SizedBox(width: 8),
+                Text(
+                  'ONNX Model Specification',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildInfoRow('Model File', metadata.modelName),
+            _buildInfoRow('Model Size', metadata.formattedSize),
+            _buildInfoRow('Input Name', metadata.inputName),
+            _buildInfoRow('Input Shape', '${metadata.inputShape} (${metadata.inputType})'),
+            _buildInfoRow('Output Name', metadata.outputName),
+            _buildInfoRow('Output Shape', '${metadata.outputShape} (${metadata.outputType})'),
+            _buildInfoRow('Execution Provider', metadata.executionProvider),
+            const Divider(height: 24, color: Colors.white12),
+            const ProbabilitiesChart(),
+          ],
+        ),
       ),
     );
   }

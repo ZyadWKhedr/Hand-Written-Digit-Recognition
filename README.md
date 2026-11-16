@@ -191,7 +191,7 @@ ONNX Runtime on iOS requires iOS 16+ and static framework linkage.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 * Flutter SDK `^3.13.2` or later

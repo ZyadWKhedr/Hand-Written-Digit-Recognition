@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import '../providers/digit_recognition_provider.dart';
 /// Clean, expanded Apple-style drawing canvas widget.
 ///
 /// Automatically auto-detects digits when the user finishes a stroke.
+/// Uses responsive sizing to fit all screen viewports without scrolling.
 /// Stateless and strictly under 200 lines.
 class DrawingCanvasWidget extends StatelessWidget {
   final double? fixedSize;
@@ -24,8 +26,9 @@ class DrawingCanvasWidget extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Expand to fill available width (capped at 420 for tablets/desktop)
-        final effectiveSize = fixedSize ?? constraints.maxWidth.clamp(280.0, 420.0);
+        // Find maximum square dimension that fits both width and height constraints
+        final maxDimension = math.min(constraints.maxWidth, constraints.maxHeight);
+        final effectiveSize = fixedSize ?? (maxDimension.isFinite && maxDimension > 0 ? maxDimension : constraints.maxWidth.clamp(260.0, 420.0));
 
         return Center(
           child: Container(
@@ -78,8 +81,8 @@ class DrawingCanvasWidget extends StatelessWidget {
                         children: [
                           Icon(
                             CupertinoIcons.pencil_outline,
-                            size: 44,
-                            color: Colors.white.withValues(alpha: 0.25),
+                            size: 42,
+                            color: Colors.white.withValues(alpha: 0.22),
                           ),
                           const SizedBox(height: 10),
                           Text(

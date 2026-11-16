@@ -7,14 +7,13 @@ import '../providers/digit_recognition_provider.dart';
 import '../widgets/drawing_canvas_widget.dart';
 import '../widgets/model_info_sheet.dart';
 import '../widgets/prediction_result_card.dart';
-import '../widgets/preprocessed_preview_card.dart';
-import '../widgets/probabilities_chart.dart';
 import '../widgets/sample_digit_selector.dart';
 
-/// Clean Apple HIG inspired interface for on-device handwritten digit recognition.
+/// Single-screen, zero-scroll Apple-style interface for on-device handwritten digit recognition.
 ///
-/// Features auto-detection on stroke completion without manual "Detect Now" buttons.
-/// Expanded drawing canvas and minimalist aesthetics. Completely stateless (< 200 lines).
+/// Designed specifically for video demonstrations: all controls, predictions,
+/// and the enlarged drawing canvas fit seamlessly within a single frame without scrolling.
+/// Completely stateless and under 200 lines.
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -44,7 +43,7 @@ class HomePage extends StatelessWidget {
           ),
         ),
         actions: [
-          // Apple-style Clear Action Button
+          // Apple-style Clear Action
           CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             onPressed: canClear ? provider.clear : null,
@@ -58,7 +57,7 @@ class HomePage extends StatelessWidget {
             ),
           ),
 
-          // Model Info Trigger
+          // Educational Model Specs Sheet Trigger
           IconButton(
             icon: const Icon(CupertinoIcons.info_circle, size: 22),
             color: Colors.white70,
@@ -71,31 +70,25 @@ class HomePage extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      body: const SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Hero Auto-Detection Card
-              const PredictionResultCard(),
-              const SizedBox(height: 18),
+              // Hero Prediction Header (Digit + Confidence + Latency + 28x28 Preview)
+              PredictionResultCard(),
+              SizedBox(height: 12),
 
-              // Enlarged Responsive Apple Drawing Canvas (Auto-Detects on Pause)
-              const DrawingCanvasWidget(),
-              const SizedBox(height: 18),
+              // Expanded Responsive Apple Drawing Canvas (Fills center without scrolling)
+              Expanded(
+                child: DrawingCanvasWidget(),
+              ),
+              SizedBox(height: 12),
 
-              // Quick Test Sample Chips (0-9)
-              const SampleDigitSelector(),
-              const SizedBox(height: 18),
-
-              // Educational Tensor Preview (Only shown when active)
-              const PreprocessedPreviewCard(),
-              if (provider.preprocessedPreviewBytes != null) const SizedBox(height: 16),
-
-              // Softmax Probabilities Breakdown
-              const ProbabilitiesChart(),
-              const SizedBox(height: 24),
+              // Bottom Quick-Select Sample Chips (0 - 9)
+              SampleDigitSelector(),
+              SizedBox(height: 4),
             ],
           ),
         ),
