@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 
@@ -71,57 +70,42 @@ class ImageProcessingService {
     final boxWidth = math.max(1.0, maxX - minX);
     final boxHeight = math.max(1.0, maxY - minY);
 
-    // 2. Render strokes off-screen onto a PictureRecorder
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(
-      recorder,
-      Rect.fromLTWH(0, 0, canvasSize, canvasSize),
-    );
-
-    // Black background (MNIST background = 0)
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, canvasSize, canvasSize),
-      Paint()..color = Colors.black,
-    );
-
-    // Draw white strokes (MNIST strokes = 255)
-    for (final stroke in strokes) {
-      final paint = Paint()
-        ..color = Colors.white
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..strokeWidth = stroke.strokeWidth
-        ..style = PaintingStyle.stroke;
-
-      final path = Path();
-      for (int i = 0; i < stroke.points.length; i++) {
-        if (i == 0) {
-          path.moveTo(stroke.points[i].dx, stroke.points[i].dy);
-        } else {
-          path.lineTo(stroke.points[i].dx, stroke.points[i].dy);
-        }
-      }
-      canvas.drawPath(path, paint);
-    }
-
-    final picture = recorder.endRecording();
-    final uiImage = await picture.toImage(
-      canvasSize.toInt(),
-      canvasSize.toInt(),
-    );
-    final byteData = await uiImage.toByteData(format: ui.ImageByteFormat.rawRgba);
-
-    if (byteData == null) {
-      throw Exception('Failed to obtain raw byte data from canvas image.');
-    }
-
-    // 3. Convert RGBA bytes to image library Image
-    final fullImage = img.Image.fromBytes(
+    // 2. Rasterize strokes directly into a pure-Dart image canvas
+    final fullImage = img.Image(
       width: canvasSize.toInt(),
       height: canvasSize.toInt(),
-      bytes: byteData.buffer,
-      order: img.ChannelOrder.rgba,
+      numChannels: 1,
     );
+    img.fill(fullImage, color: img.ColorRgb8(0, 0, 0));
+
+    final whiteColor = img.ColorRgb8(255, 255, 255);
+    for (final stroke in strokes) {
+      if (stroke.points.isEmpty) continue;
+      final radius = (stroke.strokeWidth / 2.0).round();
+
+      for (int i = 0; i < stroke.points.length; i++) {
+        final p = stroke.points[i];
+        img.fillCircle(
+          fullImage,
+          x: p.dx.toInt(),
+          y: p.dy.toInt(),
+          radius: radius,
+          color: whiteColor,
+        );
+        if (i > 0) {
+          final prev = stroke.points[i - 1];
+          img.drawLine(
+            fullImage,
+            x1: prev.dx.toInt(),
+            y1: prev.dy.toInt(),
+            x2: p.dx.toInt(),
+            y2: p.dy.toInt(),
+            color: whiteColor,
+            thickness: stroke.strokeWidth,
+          );
+        }
+      }
+    }
 
     // 4. Crop to bounding box
     final cropped = img.copyCrop(
