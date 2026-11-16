@@ -48,7 +48,9 @@ class PredictionResultCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: hasMultipleDigits ? 22 : 28,
                         fontWeight: FontWeight.w700,
-                        color: prediction != null ? CupertinoColors.activeBlue : Colors.white24,
+                        color: prediction != null
+                            ? CupertinoColors.activeBlue
+                            : Colors.white24,
                         letterSpacing: -1,
                       ),
                     ),
@@ -82,9 +84,14 @@ class PredictionResultCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: CupertinoColors.activeGreen.withValues(alpha: 0.16),
+                          color: CupertinoColors.activeGreen.withValues(
+                            alpha: 0.16,
+                          ),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -100,7 +107,7 @@ class PredictionResultCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${(prediction.inferenceTime.inMicroseconds / 1000.0).toStringAsFixed(1)} ms · On-Device ONNX',
+                    '${(prediction.inferenceTime.inMicroseconds / 1000.0).toStringAsFixed(1)} ms',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -137,7 +144,9 @@ class PredictionResultCard extends StatelessWidget {
           if (previewBytes != null) ...[
             const SizedBox(width: 8),
             Tooltip(
-              message: hasMultipleDigits ? 'Segmented Tensors' : '28x28 Tensor Input',
+              message: hasMultipleDigits
+                  ? 'Segmented Tensors'
+                  : '28x28 Tensor Input',
               child: Container(
                 height: 44,
                 decoration: BoxDecoration(

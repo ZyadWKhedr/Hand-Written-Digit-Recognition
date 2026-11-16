@@ -30,7 +30,11 @@ class ProbabilitiesChart extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(CupertinoIcons.chart_bar_alt_fill, size: 16, color: CupertinoColors.activeBlue),
+              const Icon(
+                CupertinoIcons.chart_bar_alt_fill,
+                size: 16,
+                color: CupertinoColors.activeBlue,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Confidence Breakdown',
@@ -45,7 +49,11 @@ class ProbabilitiesChart extends StatelessWidget {
               if (prediction != null)
                 Text(
                   'Top: ${prediction.digit} (${prediction.confidencePercentage})',
-                  style: const TextStyle(fontSize: 12, color: CupertinoColors.activeBlue, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: CupertinoColors.activeBlue,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
             ],
           ),
@@ -65,7 +73,9 @@ class ProbabilitiesChart extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: isTop ? FontWeight.bold : FontWeight.w500,
-                        color: isTop ? CupertinoColors.activeBlue : Colors.white60,
+                        color: isTop
+                            ? CupertinoColors.activeBlue
+                            : Colors.white60,
                       ),
                     ),
                   ),
@@ -93,7 +103,9 @@ class ProbabilitiesChart extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: isTop ? FontWeight.bold : FontWeight.w500,
-                        color: isTop ? CupertinoColors.activeBlue : Colors.white38,
+                        color: isTop
+                            ? CupertinoColors.activeBlue
+                            : Colors.white38,
                       ),
                     ),
                   ),
