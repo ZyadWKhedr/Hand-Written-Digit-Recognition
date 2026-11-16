@@ -7,7 +7,7 @@ import '../services/image_processing_service.dart';
 class DrawingController extends ChangeNotifier {
   final List<DrawingStroke> _strokes = [];
   double _strokeWidth = 20.0;
-  Color _strokeColor = Colors.white;
+  final Color _strokeColor = Colors.white;
 
   /// Unmodifiable list of completed and active strokes.
   List<DrawingStroke> get strokes => List.unmodifiable(_strokes);

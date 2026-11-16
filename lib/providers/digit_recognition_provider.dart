@@ -61,8 +61,8 @@ class DigitRecognitionProvider extends ChangeNotifier {
       _currentPrediction = null;
       _preprocessedPreviewBytes = null;
       _currentInputTensorPixels = null;
-      notifyListeners();
     }
+    notifyListeners();
   }
 
   /// Initializes the ONNX Runtime session and loads the model from assets.
@@ -127,10 +127,12 @@ class DigitRecognitionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Loads a predefined digit sample (0-9) and automatically executes recognition.
+  /// Loads a predefined digit sample (0-9) and automatically executes recognition if model is ready.
   Future<void> loadSampleDigit(int digit) async {
     _drawingController.loadSampleDigit(digit);
-    await recognize();
+    if (isModelReady) {
+      await recognize();
+    }
   }
 
   @override
