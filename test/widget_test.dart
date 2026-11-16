@@ -6,11 +6,10 @@ import 'package:provider/provider.dart';
 import 'package:handwritten_digit_recognition/main.dart';
 import 'package:handwritten_digit_recognition/providers/digit_recognition_provider.dart';
 import 'package:handwritten_digit_recognition/widgets/drawing_canvas_widget.dart';
-import 'package:handwritten_digit_recognition/widgets/sample_digit_selector.dart';
 import 'package:handwritten_digit_recognition/widgets/prediction_result_card.dart';
 
 void main() {
-  testWidgets('Renders Apple-style UI, auto-detects, and responds to interactions', (WidgetTester tester) async {
+  testWidgets('Renders clean zero-scroll interface, draws directly, and auto-detects', (WidgetTester tester) async {
     // Build root app
     await tester.pumpWidget(const HandwrittenDigitApp());
     await tester.pump();
@@ -18,30 +17,23 @@ void main() {
     // Verify AppBar
     expect(find.text('Digit Recognition'), findsOneWidget);
 
-    // Verify Drawing Canvas Widget (expanded drawing area)
+    // Verify Drawing Canvas Widget (expanded spacious drawing area)
     expect(find.byType(DrawingCanvasWidget), findsOneWidget);
     expect(find.text('Write a digit'), findsOneWidget);
 
-    // Verify Quick Test Samples
-    expect(find.byType(SampleDigitSelector), findsOneWidget);
-    expect(find.text('SAMPLE DIGITS'), findsOneWidget);
+    // Verify Sample Digits chips are removed
+    expect(find.text('SAMPLE DIGITS'), findsNothing);
 
     // Verify Prediction Result Card initial state (Ready / auto-detect info)
     expect(find.byType(PredictionResultCard), findsOneWidget);
     expect(find.text('Ready'), findsOneWidget);
     expect(find.text('Auto-detects as soon as you pause'), findsOneWidget);
 
-    // Verify no manual "Recognize Digit" button exists
-    expect(find.text('Recognize Digit'), findsNothing);
-
-    // Tap a sample chip (e.g. digit '3')
-    final sampleChip = find.widgetWithText(CupertinoButton, '3');
-    expect(sampleChip, findsOneWidget);
-    await tester.ensureVisible(sampleChip);
-    await tester.tap(sampleChip);
+    // Draw directly on the canvas with touch gesture
+    await tester.drag(find.byType(DrawingCanvasWidget), const Offset(60, 60));
     await tester.pump();
 
-    // After loading a sample, hint placeholder is gone
+    // After drawing, placeholder hint is gone
     expect(find.text('Write a digit'), findsNothing);
 
     // Tap Clear action button in AppBar

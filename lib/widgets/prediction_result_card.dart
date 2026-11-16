@@ -6,8 +6,8 @@ import '../providers/digit_recognition_provider.dart';
 
 /// Minimalist Apple-style compact hero prediction card.
 ///
-/// Displays the detected digit, confidence badge, latency, and the 28x28
-/// tensor preview inline in a single compact row (< 80px tall).
+/// Displays the detected digit/number (e.g. 41), confidence badge, latency,
+/// and the segmented tensor preview thumbnail inline in a single compact row (< 80px tall).
 /// Stateless and strictly under 200 lines.
 class PredictionResultCard extends StatelessWidget {
   const PredictionResultCard({super.key});
@@ -19,8 +19,10 @@ class PredictionResultCard extends StatelessWidget {
     final isRecognizing = provider.isRecognizing;
     final previewBytes = provider.preprocessedPreviewBytes;
 
+    final hasMultipleDigits = prediction != null && prediction.text.length > 1;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFF16161D),
         borderRadius: BorderRadius.circular(18),
@@ -28,23 +30,23 @@ class PredictionResultCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Large Hero Digit or Placeholder
+          // Hero Digit/Number Display
           Container(
-            width: 52,
-            height: 52,
+            width: hasMultipleDigits ? 56 : 48,
+            height: 48,
             decoration: BoxDecoration(
               color: prediction != null
                   ? CupertinoColors.activeBlue.withValues(alpha: 0.16)
                   : Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: isRecognizing
-                  ? const CupertinoActivityIndicator(radius: 11)
+                  ? const CupertinoActivityIndicator(radius: 10)
                   : Text(
-                      prediction != null ? '${prediction.digit}' : '—',
+                      prediction != null ? prediction.text : '—',
                       style: TextStyle(
-                        fontSize: 32,
+                        fontSize: hasMultipleDigits ? 22 : 28,
                         fontWeight: FontWeight.w700,
                         color: prediction != null ? CupertinoColors.activeBlue : Colors.white24,
                         letterSpacing: -1,
@@ -52,9 +54,9 @@ class PredictionResultCard extends StatelessWidget {
                     ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 10),
 
-          // Metadata Description (Digit, Confidence %, Latency)
+          // Metadata Description (Digit/Number, Confidence %, Latency)
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,18 +65,24 @@ class PredictionResultCard extends StatelessWidget {
                 if (prediction != null) ...[
                   Row(
                     children: [
-                      Text(
-                        'Digit ${prediction.digit}',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          letterSpacing: -0.3,
+                      Flexible(
+                        child: Text(
+                          hasMultipleDigits
+                              ? 'Number ${prediction.text}'
+                              : 'Digit ${prediction.text}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: CupertinoColors.activeGreen.withValues(alpha: 0.16),
                           borderRadius: BorderRadius.circular(6),
@@ -82,7 +90,7 @@ class PredictionResultCard extends StatelessWidget {
                         child: Text(
                           prediction.confidencePercentage,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: CupertinoColors.activeGreen,
                           ),
@@ -90,11 +98,13 @@ class PredictionResultCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
                   Text(
                     '${(prediction.inferenceTime.inMicroseconds / 1000.0).toStringAsFixed(1)} ms · On-Device ONNX',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
@@ -102,7 +112,7 @@ class PredictionResultCard extends StatelessWidget {
                   Text(
                     isRecognizing ? 'Detecting...' : 'Ready',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                       letterSpacing: -0.2,
@@ -111,8 +121,10 @@ class PredictionResultCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     'Auto-detects as soon as you pause',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       color: Colors.white.withValues(alpha: 0.45),
                     ),
                   ),
@@ -121,23 +133,22 @@ class PredictionResultCard extends StatelessWidget {
             ),
           ),
 
-          // Inline 28x28 Tensor Thumbnail (What the Model Sees)
+          // Inline Segmented Tensor Thumbnail
           if (previewBytes != null) ...[
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Tooltip(
-              message: '28x28 Tensor Input',
+              message: hasMultipleDigits ? 'Segmented Tensors' : '28x28 Tensor Input',
               child: Container(
-                width: 48,
-                height: 48,
+                height: 44,
                 decoration: BoxDecoration(
                   color: Colors.black,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.white24, width: 1),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: Image.memory(
                   previewBytes,
-                  fit: BoxFit.fill,
+                  fit: BoxFit.contain,
                   filterQuality: FilterQuality.none,
                 ),
               ),

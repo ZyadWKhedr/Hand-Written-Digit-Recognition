@@ -97,6 +97,26 @@ void main() {
       expect(result.pixels.every((p) => p == 0.0), isTrue);
       expect(result.previewBytes.isNotEmpty, isTrue);
     });
+
+    test('Segments two digits (e.g. 41) into two separate 784-float tensors', () async {
+      final service = ImageProcessingService();
+      final strokes41 = ImageProcessingService.getTwoDigitSampleStrokes(4, 1);
+      final result = await service.processStrokesToMultiDigitInputs(strokes41);
+
+      expect(result.digitsPixels.length, equals(2));
+      expect(result.digitsPixels[0].length, equals(784));
+      expect(result.digitsPixels[1].length, equals(784));
+      expect(result.previewBytes.isNotEmpty, isTrue);
+    });
+
+    test('Treats single digit (e.g. 7) as one tensor', () async {
+      final service = ImageProcessingService();
+      final strokes7 = ImageProcessingService.getSampleStrokes(7);
+      final result = await service.processStrokesToMultiDigitInputs(strokes7);
+
+      expect(result.digitsPixels.length, equals(1));
+      expect(result.digitsPixels[0].length, equals(784));
+    });
   });
 
   group('Auto-detection Debounce Tests', () {

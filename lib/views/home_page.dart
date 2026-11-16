@@ -7,13 +7,12 @@ import '../providers/digit_recognition_provider.dart';
 import '../widgets/drawing_canvas_widget.dart';
 import '../widgets/model_info_sheet.dart';
 import '../widgets/prediction_result_card.dart';
-import '../widgets/sample_digit_selector.dart';
 
-/// Single-screen, zero-scroll Apple-style interface for on-device handwritten digit recognition.
+/// Single-screen, zero-scroll Apple-style interface for on-device digit recognition.
 ///
-/// Designed specifically for video demonstrations: all controls, predictions,
-/// and the enlarged drawing canvas fit seamlessly within a single frame without scrolling.
-/// Completely stateless and under 200 lines.
+/// Supports recognizing single digits (0-9) and multi-digit numbers (e.g. 41).
+/// Features an expansive drawing area and debounced real-time auto-detection.
+/// Completely stateless and strictly under 200 lines.
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -76,19 +75,15 @@ class HomePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Hero Prediction Header (Digit + Confidence + Latency + 28x28 Preview)
+              // Hero Prediction Header (Single or Multi-Digit e.g. 41)
               PredictionResultCard(),
-              SizedBox(height: 12),
+              SizedBox(height: 14),
 
-              // Expanded Responsive Apple Drawing Canvas (Fills center without scrolling)
+              // Expansive Drawing Canvas (Fills viewport without scrolling)
               Expanded(
                 child: DrawingCanvasWidget(),
               ),
-              SizedBox(height: 12),
-
-              // Bottom Quick-Select Sample Chips (0 - 9)
-              SampleDigitSelector(),
-              SizedBox(height: 4),
+              SizedBox(height: 8),
             ],
           ),
         ),

@@ -120,21 +120,43 @@ class DigitRecognitionProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Preprocess: Rasterize, bound, scale & center into 28x28 normalized pixel tensor
-      final processed = await _imageService.processStrokesToMnistInput(
+      // 1. Preprocess: Rasterize, segment (if multi-digit e.g. "41"), scale & center
+      final processed = await _imageService.processStrokesToMultiDigitInputs(
         _drawingController.strokes,
       );
 
-      _currentInputTensorPixels = processed.pixels;
+      _currentInputTensorPixels = processed.digitsPixels.first;
       _preprocessedPreviewBytes = processed.previewBytes;
 
-      // 2. Inference: Execute ONNX Runtime session with [1, 1, 28, 28] tensor
-      final prediction = await _classifier.predict(
-        processed.pixels,
-        preprocessingDuration: processed.duration,
-      );
+      // 2. Run inference on each segmented digit
+      final segmentPredictions = <DigitPrediction>[];
+      for (final pixels in processed.digitsPixels) {
+        final pred = await _classifier.predict(
+          pixels,
+          preprocessingDuration: processed.duration,
+        );
+        segmentPredictions.add(pred);
+      }
 
-      _currentPrediction = prediction;
+      if (segmentPredictions.length > 1) {
+        final combinedText = segmentPredictions.map((p) => '${p.digit}').join();
+        final combinedDigits = segmentPredictions.map((p) => p.digit).toList();
+        final avgConfidence = segmentPredictions.map((p) => p.confidence).reduce((a, b) => a + b) / segmentPredictions.length;
+        final totalInference = segmentPredictions.map((p) => p.inferenceTime).reduce((a, b) => a + b);
+
+        _currentPrediction = DigitPrediction(
+          digit: segmentPredictions.first.digit,
+          text: combinedText,
+          digits: combinedDigits,
+          confidence: avgConfidence,
+          probabilities: segmentPredictions.first.probabilities,
+          segments: segmentPredictions,
+          preprocessingTime: processed.duration,
+          inferenceTime: totalInference,
+        );
+      } else {
+        _currentPrediction = segmentPredictions.first;
+      }
     } catch (e) {
       _errorMessage = 'Inference error: $e';
     } finally {
