@@ -1,6 +1,6 @@
 # Inside On-Device Machine Learning: ONNX and Flutter
 
-An educational, production-ready reference application demonstrating how to integrate pretrained **ONNX (Open Neural Network Exchange)** machine learning models into **Flutter** for fast, private, on-device inference without cloud dependencies.
+A production-ready reference application demonstrating how to integrate pretrained **ONNX (Open Neural Network Exchange)** machine learning models into **Flutter** for fast, private, on-device inference without cloud dependencies.
 
 <img width="776" height="720" alt="Screen Recording 2026-11-16 at 4 45 17 PM (online-video-cutter com)" src="https://github.com/user-attachments/assets/fa96956a-9f67-425a-970a-fa033cd2fa81" />
 
